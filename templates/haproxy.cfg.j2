@@ -23,7 +23,7 @@ global
     #
     #    local2.*                       /var/log/haproxy.log
     #
-    log         127.0.0.1 local2
+    log         127.0.0.1 local2 info
 
     chroot      /var/lib/haproxy
     pidfile     /var/run/haproxy.pid
@@ -40,10 +40,10 @@ global
 # use if not designated in their block
 #---------------------------------------------------------------------
 defaults
-    mode                    tcp
+    mode                    http
     log                     global
     option                  httplog
-    option                  dontlognull
+#   option                  dontlognull
     option http-server-close
     option forwardfor       except 127.0.0.0/8
     option                  redispatch
@@ -51,8 +51,8 @@ defaults
     timeout http-request    10s
     timeout queue           1m
     timeout connect         10s
-    timeout client          4h
-    timeout server          4h
+    timeout client          1m
+    timeout server          1m
     timeout http-keep-alive 10s
     timeout check           10s
     maxconn                 3000
@@ -77,17 +77,25 @@ frontend openshift-api-server
     option tcplog
 {% endif %}
 
+#---------------------------------------------------------------------
+# Node backends for serving API traffic
+#---------------------------------------------------------------------
 backend openshift-api-server
+    mode        tcp
+    option    log-health-checks
+    option      httpchk GET /readyz HTTP/1.0
+    http-check expect status 200
+    default-server check check-ssl inter 3s fall 2 rise 3 verify none 
 {% if ipi %}
     balance roundrobin
-    server backend-api {{ helper.api_ipaddr }}:6443 check
+    server backend-api {{ helper.api_ipaddr }}:6443
 {% else %}
     balance source
 {% if bootstrap is defined %}
-    server {{ bootstrap.name | lower }} {{ bootstrap.ipaddr }}:6443 check
+    server {{ bootstrap.name | lower }} {{ bootstrap.ipaddr }}:6443
 {% endif %}
 {% for m in masters %}
-    server {{ m.name | lower }} {{ m.ipaddr }}:6443 check
+    server {{ m.name | lower }} {{ m.ipaddr }}:6443
 {% endfor %}
 {% endif %}
 
