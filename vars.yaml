@@ -1,0 +1,12 @@
+---
+setup_registry:
+  deploy: true
+  autosync_registry: true
+  registry_image: docker.io/library/registry:2
+  local_repo: "ocp4/openshift4"
+  product_repo: "openshift-release-dev"
+  release_name: "ocp-release"
+  release_tag: "4.4.9-ppc64le"
+  registry_user: "admin"
+  registry_password: "admin"
+ppc64le: true

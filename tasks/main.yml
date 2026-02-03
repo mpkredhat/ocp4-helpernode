@@ -42,6 +42,38 @@
       name: "{{ syslinuxpkgs }}"
       state: present
     when: not staticips and not ppc64le
+  
+  - name: Copy sample_isc.yaml
+    copy:
+      src: ../files/sample_isc.yaml
+      dest: /usr/local/bin/sample_isc.yaml
+      mode: 0655
+
+  - name: Downloading oc-mirror package
+    get_url:
+      url: "{{ oc_mirror_source }}"
+      dest: /usr/local/bin/oc-mirror.tar.gz
+      mode: 0644
+    when: download_imgs or force_ocp_download
+  
+  - name: Unarchiving oc-mirror package
+    unarchive:
+      src: /usr/local/bin/oc-mirror.tar.gz
+      dest: /usr/local/bin
+      remote_src: yes
+      creates: "{{ oc_mirror_bin }}"
+
+  - name: Set executable permission on oc-mirror
+    file:
+      path: "/usr/local/bin/{{ oc_mirror_bin }}"
+      mode: "0755"
+      owner: root
+      group: root
+
+  - name: Check oc-mirror version
+    shell: "{{ oc_mirror_bin }} version --output=json --v2"
+    register: oc_mirror_version
+    changed_when: false
 
   - name: Remove existing config files
     import_tasks: remove_old_config_files.yaml
