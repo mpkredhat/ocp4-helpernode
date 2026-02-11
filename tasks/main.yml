@@ -43,10 +43,10 @@
       state: present
     when: not staticips and not ppc64le
   
-  - name: Copy sample_isc.yaml
+  - name: Copy mirror.yaml
     copy:
-      src: ../files/sample_isc.yaml
-      dest: /usr/local/bin/sample_isc.yaml
+      src: ../files/mirror.yaml
+      dest: /usr/local/src/mirror.yaml
       mode: 0655
 
   - name: Downloading oc-mirror package

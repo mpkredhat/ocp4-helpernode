@@ -134,7 +134,7 @@
     register: sig_output
 
   - name: Mirror the registry
-    when: setup_registry.autosync_registry
+    when: setup_registry.autosync_registry and sig_output
     shell: oc adm -a ~/.openshift/pull-secret-updated release mirror \
       --from={{ release_image }} \
       --to={{ local_registry }}/{{ setup_registry.local_repo }} \
