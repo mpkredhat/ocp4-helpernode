@@ -141,6 +141,19 @@
       --to={{ local_registry }}/{{ setup_registry.local_repo }} \
       --to-release-image={{ local_registry }}/{{ setup_registry.local_repo }}:{{ setup_registry.release_tag }}
     register: registry
+  
+  - name: (MULTI) Mirror the registry 
+    shell: |
+      if [ -n $( oc adm release info {{ release_image }} | grep release.openshift.io/architecture ) ]; then
+      for DIGEST in $(oc image info --output=json -a ~/.openshift/pull-secret-updated {{ release_image }} 2>&1 | grep linux | awk '{print $NF}')
+      do
+        SIGFILE=$(echo $DIGEST | sed 's/:/-/g').sig
+        oc image mirror -a ~/.openshift/pull-secret-updated \
+          {{ setup_registry.remote_registry | default('quay.io') }}/{{ setup_registry.product_repo }}/{{ setup_registry.release_name }}:${SIGFILE} \ 
+          {{ local_registry }}/{{ setup_registry.local_repo }}:${SIGFILE} \
+          --force=false --continue-on-error
+        done
+      fi  
 
   - name: Generate Local Registry information
     when: setup_registry.autosync_registry
